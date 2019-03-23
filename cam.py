@@ -1,4 +1,5 @@
 import os
+import sys
 from os.path import join
 import re
 from picamera import PiCamera
@@ -10,9 +11,10 @@ import pdb
 from PIL import Image
 import numpy as np
 import subprocess
+from azure_helpers import AzureCaptioner, TmpSpeaker
 
 WINDOW_SIZE = (320,240)
-NN_INPUT_SIZE = (320,240)
+FULL_IMAGE_SIZE = WINDOW_SIZE
 WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
 
@@ -37,39 +39,32 @@ def button_pressed():
     return False
 
 
-def speak_caption(caption):
-    print(caption)
-    subprocess.call(['espeak', "'{}'".format(caption), '2>/dev/null'])
-
-
-def generate_caption(img):
-    # TODO may need to convert image before putting into model, maybe not, rgb should work
-    return "I see a big puppy"
-
-
-def save_img_and_caption(img, caption):
+def save_img_and_caption(stream, caption, width=FULL_IMAGE_SIZE[1], height=FULL_IMAGE_SIZE[0]):
     global FILE_NUM
-    # pass the pygame image here
     image_filename = 'IMG_{}.jpg'.format(FILE_NUM)
     caption_filename = 'IMG_{}.txt'.format(FILE_NUM)
-    im = Image.fromarray(img)
+    im = Image.open(stream)
     im.save(join(IMG_DIR, image_filename))
-
-    # pygame.image.save(img, join(IMG_DIR, image_filename))
     with open(join(IMG_DIR, caption_filename), 'w') as f:
         f.write(caption)
     # Increment file number
     FILE_NUM += 1
 
+# TODO log errors from api calls, add exception handling
+# TODO use azure text to speech while we're at it
+# TODO refactor into single class
 
 # MAIN PROGRAM -------------------------------------------------
+captioner = AzureCaptioner()
+tts = TmpSpeaker()
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
 rgb = bytearray(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)
 camera = PiCamera()
 start = timer()
 
-while timer() - start < 20:
+
+while timer() - start < 30:
     # Byte array to hold image
     stream = io.BytesIO()
 
@@ -90,19 +85,10 @@ while timer() - start < 20:
 
     # Check if button pressed and perform appropriate actions if it is
     if button_pressed():
-        # Currently saved image is limited by screen resolution, may eventually want to 
-        # dump full res picture into disk, resize in memory, and send to neural net
-        # Order of these operations depends on memory limitations. Not sure how much NN needs
         stream = io.BytesIO()
-        camera.capture(stream, use_video_port=False, resize=WINDOW_SIZE, format='rgb')
+        camera.capture(stream, use_video_port=False, resize=FULL_IMAGE_SIZE, format='jpeg')
         stream.seek(0)
-        stream.readinto(rgb)
-        # img = pygame.image.frombuffer(rgb[0:(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)], WINDOW_SIZE, 'RGB')
-        # np_img = pygame.surfarray.array3d(img)
-        np_img = np.frombuffer(rgb, dtype=np.uint8).reshape((WINDOW_SIZE[1], WINDOW_SIZE[0], 3))
-
-        caption = generate_caption(np_img) # probably need to somehow convert to numpy array or tensor
-        speak_caption(caption)
-        save_img_and_caption(np_img, caption)
-
-
+        # TODO: take image full size
+        caption = captioner.generate_caption(stream) # probably need to somehow convert to numpy array or tensor
+        tts.speak(caption)
+        save_img_and_caption(stream, caption)
