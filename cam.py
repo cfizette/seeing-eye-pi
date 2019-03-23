@@ -8,8 +8,11 @@ import pygame
 import io
 import pdb
 from PIL import Image
+import numpy as np
+import subprocess
 
 WINDOW_SIZE = (320,240)
+NN_INPUT_SIZE = (320,240)
 WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
 
@@ -36,11 +39,12 @@ def button_pressed():
 
 def speak_caption(caption):
     print(caption)
+    subprocess.call(['espeak', "'{}'".format(caption), '2>/dev/null'])
 
 
 def generate_caption(img):
     # TODO may need to convert image before putting into model, maybe not, rgb should work
-    return "I see a picture of something"
+    return "I see a big puppy"
 
 
 def save_img_and_caption(img, caption):
@@ -48,7 +52,10 @@ def save_img_and_caption(img, caption):
     # pass the pygame image here
     image_filename = 'IMG_{}.jpg'.format(FILE_NUM)
     caption_filename = 'IMG_{}.txt'.format(FILE_NUM)
-    pygame.image.save(img, join(IMG_DIR, image_filename))
+    im = Image.fromarray(img)
+    im.save(join(IMG_DIR, image_filename))
+
+    # pygame.image.save(img, join(IMG_DIR, image_filename))
     with open(join(IMG_DIR, caption_filename), 'w') as f:
         f.write(caption)
     # Increment file number
@@ -74,7 +81,6 @@ while timer() - start < 20:
     # Convert to pygame image
     img = pygame.image.frombuffer(rgb[0:(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)], WINDOW_SIZE, 'RGB')
 
-    #pdb.set_trace()
     # Display image on pygame screen
     if img is None or img.get_height() < WINDOW_SIZE[1]: # Letterbox, clear background
         screen.fill(0)
@@ -84,8 +90,19 @@ while timer() - start < 20:
 
     # Check if button pressed and perform appropriate actions if it is
     if button_pressed():
-        caption = generate_caption(img) # probably need to somehow convert to numpy array or tensor
+        # Currently saved image is limited by screen resolution, may eventually want to 
+        # dump full res picture into disk, resize in memory, and send to neural net
+        # Order of these operations depends on memory limitations. Not sure how much NN needs
+        stream = io.BytesIO()
+        camera.capture(stream, use_video_port=False, resize=WINDOW_SIZE, format='rgb')
+        stream.seek(0)
+        stream.readinto(rgb)
+        # img = pygame.image.frombuffer(rgb[0:(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)], WINDOW_SIZE, 'RGB')
+        # np_img = pygame.surfarray.array3d(img)
+        np_img = np.frombuffer(rgb, dtype=np.uint8).reshape((WINDOW_SIZE[1], WINDOW_SIZE[0], 3))
+
+        caption = generate_caption(np_img) # probably need to somehow convert to numpy array or tensor
         speak_caption(caption)
-        save_img_and_caption(img, caption)
+        save_img_and_caption(np_img, caption)
 
 
