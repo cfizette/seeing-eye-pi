@@ -1,16 +1,14 @@
 import os
-import sys
-from os.path import join
-import re
-from picamera import PiCamera
-from time import sleep
-from timeit import default_timer as timer
-import pygame
 import io
+import re
+import sys
 import pdb
-from PIL import Image
-import numpy as np
+import pygame
 import subprocess
+from PIL import Image
+from os.path import join
+from picamera import PiCamera
+from timeit import default_timer as timer
 from azure_helpers import AzureCaptioner, TmpSpeaker
 
 WINDOW_SIZE = (320,240)
