@@ -9,12 +9,14 @@ from PIL import Image
 from os.path import join
 from picamera import PiCamera
 from timeit import default_timer as timer
-from azure_helpers import AzureCaptioner, TmpSpeaker
+from azure_helpers import AzureCaptioner, AzureTextToSpeech
 
 WINDOW_SIZE = (320,240)
 FULL_IMAGE_SIZE = WINDOW_SIZE
 WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
+AUDIO_FREQUENCY = 12000 #TODO figure out correct setting for this
+# 12000 sounds good on my computer but I have to increase it to sound correct on the Raspberry Pi
 
 
 # Check that the directory is made and find max image
@@ -51,10 +53,13 @@ def save_img_and_caption(stream, caption, width=FULL_IMAGE_SIZE[1], height=FULL_
 # TODO log errors from api calls, add exception handling
 # TODO use azure text to speech while we're at it
 # TODO refactor into single class
+# TODO refresh speech access token after some set amount of time. Token expires after 10 min https://docs.microsoft.com/azure/cognitive-services/authentication#authenticate-with-an-authentication-token
+# token refresh takes around 1 to 1.5 seconds so we don't want to do it after every photo
 
 # MAIN PROGRAM -------------------------------------------------
 captioner = AzureCaptioner()
-tts = TmpSpeaker()
+tts = AzureTextToSpeech()
+pygame.mixer.pre_init(frequency=AUDIO_FREQUENCY) 
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
 rgb = bytearray(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)
@@ -88,5 +93,6 @@ while timer() - start < 30:
         stream.seek(0)
         # TODO: take image full size
         caption = captioner.generate_caption(stream) # probably need to somehow convert to numpy array or tensor
-        tts.speak(caption)
+        audio = tts.get_audio(caption)
+        pygame.mixer.Sound(audio).play()
         save_img_and_caption(stream, caption)
