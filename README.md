@@ -14,3 +14,13 @@ SPEECH_FETCH_TOKEN_URL=
 SPEECH_ACCOUNT_KEY=
 SPEECH_REST_URL=
 ```
+
+
+
+## Major TODOs
+* Error handling and logging
+* Refactor app into class (maybe)
+
+
+## Minor TODOs
+* Add click sound when picture taken
