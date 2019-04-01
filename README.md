@@ -20,6 +20,7 @@ SPEECH_REST_URL=
 ## Major TODOs
 * Error handling and logging
 * Refactor app into class (maybe)
+* Design/buy/download case and put everything together
 
 
 ## Minor TODOs
