@@ -7,6 +7,8 @@ from xml.etree import ElementTree
 from dotenv import load_dotenv, find_dotenv
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
+import io
+
 load_dotenv(find_dotenv())
 
 COMPUTER_VISION_ENDPOINT = os.environ['COMPUTER_VISION_ENDPOINT']
@@ -23,12 +25,22 @@ class AzureCaptioner:
         self.credentials = CognitiveServicesCredentials(key)
         self.client = ComputerVisionClient(endpoint, self.credentials)
 
-    def generate_caption(self, stream):
-        analysis = self.client.describe_image_in_stream(stream, 1, 'en')
+    def generate_caption(self, stream: io.BytesIO) -> str:
+        """Generate a caption for an image using Azure
+        
+        Arguments:
+            stream {io.BytesIO} -- Byte stream containing image data
+        
+        Returns:
+            str -- Caption for the image
+        """
+
+        analysis = self.client.describe_image_in_stream(image=stream, max_candidates=1, language='en')
         return "I see " + analysis.captions[0].text
 
 
 class TmpSpeaker:
+    # Converts text to speech using espeak command line tool, for testing purposes
     def __init__(self):
         pass
 
@@ -37,36 +49,62 @@ class TmpSpeaker:
         subprocess.call(['espeak', "'{}'".format(text), '2>/dev/null'])
 
 
-#TODO add logging
+# TODO add logging
+# TODO Add params for tts config
+# TODO check if token is expired and refresh if needed (remember to initialie tts at beginning of azure function)
 class AzureTextToSpeech(object):
-    def __init__(self, key=SPEECH_KEY, rest_url=SPEECH_REST_URL):
+    def __init__(self, key=SPEECH_KEY, rest_url=SPEECH_REST_URL, fetch_token_url=SPEECH_FETCH_TOKEN_URL):
         self.key = key
         self.rest_url = rest_url
+        self.fetch_token_url = fetch_token_url
         self.access_token = None
         self.get_token()
 
-    def get_token(self, fetch_token_url=SPEECH_FETCH_TOKEN_URL):
+    def get_token(self):
+        # Get access token from Azure
+
         headers = {
             'Ocp-Apim-Subscription-Key': self.key
         }
-        response = requests.post(fetch_token_url, headers=headers)
+        response = requests.post(self.fetch_token_url, headers=headers)
         self.access_token = str(response.text)
 
-    def get_audio(self, text):
-        headers = {
-            'Authorization': 'Bearer ' + self.access_token,
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'raw-24khz-16bit-mono-pcm',
-            'User-Agent': 'seeing-eye-pi'
-        }
+    def construct_ssml(self, text: str) -> str:
+        """Construct SSML (Speech Synthesis Markup Language) configuration for speech REST API
+        
+        Arguments:
+            text {str} -- text to be synthesized into speech
+        
+        Returns:
+            {str} -- String representation of the SSML config
+        """
+
         xml_body = ElementTree.Element('speak', version='1.0')
         xml_body.set('{http://www.w3.org/XML/1998/namespace}lang', 'en-us')
         voice = ElementTree.SubElement(xml_body, 'voice')
         voice.set('{http://www.w3.org/XML/1998/namespace}lang', 'en-US')
         voice.set('name', 'Microsoft Server Speech Text to Speech Voice (en-US, Guy24KRUS)')
         voice.text = text
-        body = ElementTree.tostring(xml_body)
+        return ElementTree.tostring(xml_body)
 
+    def get_audio(self, text: str) -> bytes:
+        """Convert text to audio using Azure Text to Speech REST API
+        
+        Arguments:
+            text {str} -- Text to be synthesized into speech
+        
+        Returns:
+            bytes -- Audio data of synthesized speech
+        """
+
+        headers = {
+            'Authorization': 'Bearer ' + self.access_token,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'raw-24khz-16bit-mono-pcm',
+            'User-Agent': 'seeing-eye-pi'
+        }
+        
+        body = self.construct_ssml(text)
         response = requests.post(self.rest_url, headers=headers, data=body)
         if response.status_code == 200:
             print("\nStatus code: " + str(response.status_code))
@@ -74,3 +112,34 @@ class AzureTextToSpeech(object):
         else:
             print("\nStatus code: " + str(response.status_code) + "\nSomething went wrong. Check your subscription key and headers.\n")
             return None
+
+# TODO change to return caption and audio in dictionary
+# TODO create base class to generalize this process, may want different captioning or tts systems in the future
+class AzureImageToSpeech(object):
+    def __init__(self, 
+                 cv_endpoint=COMPUTER_VISION_ENDPOINT,
+                 cv_key=COMPUTER_VISION_KEY,
+                 speech_key=SPEECH_KEY,
+                 speech_rest_url=SPEECH_REST_URL,
+                 speech_fetch_token_url=SPEECH_FETCH_TOKEN_URL):
+
+        self.cv_endpoint = cv_endpoint
+        self.cv_key = cv_key
+        self.speech_key = speech_key
+        self.speech_rest_url = speech_rest_url
+        self.speech_fetch_token_url = speech_fetch_token_url
+        self.captioner = AzureCaptioner(endpoint=self.cv_endpoint, key=self.cv_key)
+        self.tts = AzureTextToSpeech(key=self.speech_key, rest_url=self.speech_rest_url, fetch_token_url=speech_fetch_token_url)
+
+    def get_audio(self, image: io.BytesIO) -> bytes:
+        """Caption an image and convert the caption to audio
+        
+        Arguments:
+            image {io.BytesIO} -- Byte stream containing image data
+        
+        Returns:
+            bytes -- Audio of the generated caption
+        """
+        caption = self.captioner.generate_caption(image)
+        audio = self.tts.get_audio(caption)
+        return audio

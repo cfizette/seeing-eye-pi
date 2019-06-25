@@ -1,7 +1,7 @@
 import logging
 import io
 import azure.functions as func
-from HttpTrigger.azure_helpers import AzureCaptioner
+from HttpTrigger.azure_helpers import AzureCaptioner, AzureTextToSpeech, AzureImageToSpeech
 import base64
 
 
@@ -19,9 +19,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         pass
 
     if image:
-        captioner = AzureCaptioner()
-        caption = captioner.generate_caption(image)
-        return func.HttpResponse('{}'.format(caption))
+        its = AzureImageToSpeech()
+        audio = its.get_audio(image)
+        audio_encoded = base64.b64encode(audio)
+        return func.HttpResponse('{}'.format(audio_encoded))
     else:
         return func.HttpResponse(
              "Please pass a name on the query string or in the request body",
