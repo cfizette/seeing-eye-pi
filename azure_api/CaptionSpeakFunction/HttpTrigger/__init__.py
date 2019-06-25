@@ -22,7 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         its = AzureImageToSpeech()
         audio = its.get_audio(image)
         audio_encoded = base64.b64encode(audio)
-        return func.HttpResponse('{}'.format(audio_encoded))
+        return func.HttpResponse(audio_encoded)
     else:
         return func.HttpResponse(
              "Please pass a name on the query string or in the request body",

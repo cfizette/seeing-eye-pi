@@ -2,8 +2,9 @@ import requests
 import io
 import base64
 import pygame
+import time
 
-pygame.mixer.init()
+pygame.mixer.init(12000)
 
 with open('cat.jpg', 'rb') as f:
     data = f.read()
@@ -13,5 +14,9 @@ with open('cat.jpg', 'rb') as f:
     r = requests.post('http://localhost:7071/api/HttpTrigger', data)
 
 audio = base64.b64decode(r.content)
-pygame.mixer.Sound(audio).play()
+sound = pygame.mixer.Sound(audio)
+channel = sound.play()
+while channel.get_busy():
+    # maybe use something other than time.sleep
+    time.sleep(0.1)
 
