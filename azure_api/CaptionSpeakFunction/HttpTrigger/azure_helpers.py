@@ -2,9 +2,8 @@ import os
 import subprocess
 import requests
 import time
-import pdb
-from xml.etree import ElementTree
 from dotenv import load_dotenv, find_dotenv
+from xml.etree import ElementTree
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
 import io

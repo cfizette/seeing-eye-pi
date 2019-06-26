@@ -1,19 +1,22 @@
 import requests
 import io
 import base64
-import pygame
+#import pygame
 import time
 
-pygame.mixer.init(12000)
+#pygame.mixer.init(12000)
+FUNCTION_URL = 'https://imagetospeechv1.azurewebsites.net/api/httptrigger?code=7bSOAddjeDxEPv0vJhmD/Z1nZT8ZBHM1QQN499C/pCCgwRzvTHleOw=='
 
 with open('cat.jpg', 'rb') as f:
     data = f.read()
     data = base64.b64encode(data)  # data must be b64 encoded to be read correctly by azure function
     #print(data[:10])
     #print(len(data))
-    r = requests.post('http://localhost:7071/api/HttpTrigger', data)
+    r = requests.post(FUNCTION_URL, data)
 
 audio = base64.b64decode(r.content)
+print(r)
+print(r.content[:10])
 sound = pygame.mixer.Sound(audio)
 channel = sound.play()
 while channel.get_busy():
