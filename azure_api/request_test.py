@@ -1,10 +1,10 @@
 import requests
 import io
 import base64
-#import pygame
+import pygame
 import time
 
-#pygame.mixer.init(12000)
+pygame.mixer.init(11500)
 FUNCTION_URL = 'https://imagetospeechv1.azurewebsites.net/api/httptrigger?code=7bSOAddjeDxEPv0vJhmD/Z1nZT8ZBHM1QQN499C/pCCgwRzvTHleOw=='
 
 with open('cat.jpg', 'rb') as f:
