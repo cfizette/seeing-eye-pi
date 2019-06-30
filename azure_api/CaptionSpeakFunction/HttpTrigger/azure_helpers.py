@@ -86,14 +86,14 @@ class AzureTextToSpeech(object):
         voice.text = text
         return ElementTree.tostring(xml_body)
 
-    def get_audio(self, text: str) -> bytes:
+    def get_audio(self, text: str) -> response:
         """Convert text to audio using Azure Text to Speech REST API
         
         Arguments:
             text {str} -- Text to be synthesized into speech
         
         Returns:
-            bytes -- Audio data of synthesized speech
+            response -- Response object returned from Azure. 
         """
 
         headers = {
@@ -107,10 +107,9 @@ class AzureTextToSpeech(object):
         response = requests.post(self.rest_url, headers=headers, data=body)
         if response.status_code == 200:
             print("\nStatus code: " + str(response.status_code))
-            return response.content
         else:
             print("\nStatus code: " + str(response.status_code) + "\nSomething went wrong. Check your subscription key and headers.\n")
-            return None
+        return response
 
 # TODO change to return caption and audio in dictionary
 # TODO create base class to generalize this process, may want different captioning or tts systems in the future
@@ -140,5 +139,5 @@ class AzureImageToSpeech(object):
             bytes -- Audio of the generated caption
         """
         caption = self.captioner.generate_caption(image)
-        audio = self.tts.get_audio(caption)
-        return audio
+        audio_response = self.tts.get_audio(caption)
+        return audio_response.content
