@@ -4,6 +4,7 @@ import re
 import sys
 import pdb
 import pygame
+import time
 import subprocess
 from PIL import Image
 from os.path import join
@@ -42,7 +43,7 @@ class CameraAppFilesystem:
             os.makedirs(self.img_dir)
         for filename in os.listdir(self.img_dir):
             n = int(re.split('[_.]', filename)[1])
-            if n > self.file_num:
+            if n >= self.file_num:
                 self.file_num = n+1
 
     def save_img_and_caption(self, stream, caption):
@@ -62,8 +63,8 @@ class CameraApp:
         self.rgb = bytearray(RGB_DATA_SIZE)
         self.screen = pygame.display.set_mode(WINDOW_SIZE)
         self.camera = PiCamera()
-        self.take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
         self.filesystem = CameraAppFilesystem()
+        self.take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
 
     def show_viewfinder(self):
         stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, img_format='rgb')
@@ -84,12 +85,17 @@ class CameraApp:
         return stream
 
     def capture_and_process_image(self):
+        print('Taking photo in capture_and_process_image')
         stream = self.capture_photo_to_stream(use_video_port=False, resize=FULL_IMAGE_SIZE, img_format='jpeg')
         image_bytes = stream.read()
-        # TODO: take image full size
+        print('Sending photo to Azure')
         audio = self.image_to_speech.post_request(image_bytes)
+        print("Received audio")
+        print('Playing audio')
         # TODO: pause until audio is done playing
         pygame.mixer.Sound(audio).play()
+        time.sleep(5)
+        print("Saving data")
         self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
 
     def run(self):
