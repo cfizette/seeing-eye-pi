@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 
 class GPIOButton(object):
-    def _init__(self, pin, pull_up_down=GPIO.PUD_UP):
+    def __init__(self, pin, pull_up_down=GPIO.PUD_UP):
         self.pin = pin
         self.pull_up_down = pull_up_down
         GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
