@@ -10,7 +10,7 @@ import base64
 # Figure out how to tell when token is expired and then re-fetch it.
 its = AzureImageToSpeech()
 
-
+# TODO: docstrings
 def main(req: func.HttpRequest) -> func.HttpResponse:
     # Body of request must contain b64 encoded image data
 
