@@ -7,10 +7,14 @@ import pygame
 import subprocess
 from PIL import Image
 from os.path import join
+import RPi.GPIO as GPIO
 from picamera import PiCamera
+from buttons import GPIOButton
 from timeit import default_timer as timer
 from api_requests import ImageToSpeechRequest
+GPIO.setmode(GPIO.BCM)  # TODO: Run this when button is created
 
+TAKE_PHOTO_PIN = 17
 WINDOW_SIZE = (320,240)
 FULL_IMAGE_SIZE = WINDOW_SIZE
 WAIT_AFTER_PHOTO = 3
@@ -51,6 +55,7 @@ def save_img_and_caption(stream, caption, width=FULL_IMAGE_SIZE[1], height=FULL_
     # Increment file number
     FILE_NUM += 1
 
+# TODO Create functions or classes for main application routines (viewfinder, taking photo, etc...)
 # TODO log errors from api calls, add exception handling
 # TODO use azure text to speech while we're at it
 # TODO refactor into single class
@@ -64,6 +69,7 @@ pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
 rgb = bytearray(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)
 camera = PiCamera()
+take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
 start = timer()
 
 
@@ -87,12 +93,13 @@ while timer() - start < 10:
     pygame.display.update()
 
     # Check if button pressed and perform appropriate actions if it is
-    if button_pressed():
+    if take_photo_button.is_pressed():
         stream = io.BytesIO()
         camera.capture(stream, use_video_port=False, resize=FULL_IMAGE_SIZE, format='jpeg')
         stream.seek(0)
         image_bytes = stream.read()
         # TODO: take image full size
         audio = image_to_speech.post_request(image_bytes)
+        # TODO: pause until audio is done playing
         pygame.mixer.Sound(audio).play()
         save_img_and_caption(stream, 'foo')
