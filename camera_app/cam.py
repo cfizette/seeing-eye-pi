@@ -68,6 +68,7 @@ pygame.mixer.pre_init(frequency=AUDIO_FREQUENCY)
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
 rgb = bytearray(WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3)
+# TODO: create general camera interface to allow use of other cameras, need to consider output format
 camera = PiCamera()
 take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
 start = timer()
@@ -103,3 +104,12 @@ while timer() - start < 10:
         # TODO: pause until audio is done playing
         pygame.mixer.Sound(audio).play()
         save_img_and_caption(stream, 'foo')
+
+
+
+class CameraApp:
+    def __init__(self, **kwargs):
+        self.image_to_speech = kwargs['image_to_speech']
+        self.rgb = kwargs['rgb']
+        self.screen = kwargs['screen']
+        
