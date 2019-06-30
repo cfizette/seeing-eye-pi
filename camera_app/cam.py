@@ -84,6 +84,13 @@ class CameraApp:
         stream.seek(0)
         return stream
 
+    def play_audio(self, audio):
+        sound = pygame.mixer.Sound(audio)
+        channel = sound.play()
+        # Need to pause to allow sound to be played
+        while channel.get_busy():
+            pygame.time.delay(100)
+
     def capture_and_process_image(self):
         print('Taking photo in capture_and_process_image')
         stream = self.capture_photo_to_stream(use_video_port=False, resize=FULL_IMAGE_SIZE, img_format='jpeg')
@@ -92,9 +99,7 @@ class CameraApp:
         audio = self.image_to_speech.post_request(image_bytes)
         print("Received audio")
         print('Playing audio')
-        # TODO: pause until audio is done playing
-        pygame.mixer.Sound(audio).play()
-        time.sleep(5)
+        self.play_audio(audio)
         print("Saving data")
         self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
 
