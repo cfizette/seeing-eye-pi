@@ -127,7 +127,7 @@ class CameraAppFilesystem:
             if n > self.file_num:
                 self.file_num = n+1
 
-    def save_img_and_caption(stream, caption):
+    def save_img_and_caption(self, stream, caption):
         image_filename = 'IMG_{}.jpg'.format(self.file_num)
         caption_filename = 'IMG_{}.txt'.format(self.file_num)
         im = Image.open(stream)
@@ -148,7 +148,7 @@ class CameraApp:
         self.filesystem = CameraAppFilesystem()
 
     def show_viewfinder(self):
-        stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, format='rgb')
+        stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, img_format='rgb')
         stream.readinto(self.rgb)
         # Convert to pygame image
         img = pygame.image.frombuffer(self.rgb[0:(RGB_DATA_SIZE)], WINDOW_SIZE, 'RGB')
@@ -166,7 +166,7 @@ class CameraApp:
         return stream
 
     def capture_and_process_image(self):
-        stream = self.capture_photo_to_stream(use_video_port=False, resize=FULL_IMAGE_SIZE, format='jpeg')
+        stream = self.capture_photo_to_stream(use_video_port=False, resize=FULL_IMAGE_SIZE, img_format='jpeg')
         image_bytes = stream.read()
         # TODO: take image full size
         audio = self.image_to_speech.post_request(image_bytes)
@@ -178,7 +178,7 @@ class CameraApp:
         start = timer()
         while timer() - start < 10:
             self.show_viewfinder()
-            if take_photo_button.is_pressed():
+            if self.take_photo_button.is_pressed():
                 self.capture_and_process_image()
 
 if __name__ == "__main__":
