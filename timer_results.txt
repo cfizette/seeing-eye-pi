@@ -1,0 +1,13 @@
+N_ITER = 10
+
+########################################################
+cached_token = true
+api_gateway_location = north_central_us
+function_location = east_us
+average_time = 1.8
+########################################################
+cached_token = true
+api_gateway_location = north_central_us
+function_location = north_central_us
+average_time = TBD
+########################################################

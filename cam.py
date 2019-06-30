@@ -9,13 +9,14 @@ from PIL import Image
 from os.path import join
 from picamera import PiCamera
 from timeit import default_timer as timer
-from azure_helpers import AzureCaptioner, AzureTextToSpeech
+from api_requests import ImageToSpeechRequest
 
 WINDOW_SIZE = (320,240)
 FULL_IMAGE_SIZE = WINDOW_SIZE
 WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
 AUDIO_FREQUENCY = 12000 #TODO figure out correct setting for this
+REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1/HttpTrigger'
 # 12000 sounds good on my computer but I have to increase it to sound correct on the Raspberry Pi
 
 
@@ -57,8 +58,7 @@ def save_img_and_caption(stream, caption, width=FULL_IMAGE_SIZE[1], height=FULL_
 # token refresh takes around 1 to 1.5 seconds so we don't want to do it after every photo
 
 # MAIN PROGRAM -------------------------------------------------
-captioner = AzureCaptioner()
-tts = AzureTextToSpeech()
+image_to_speech = ImageToSpeechRequest(url=REQUEST_URL)
 pygame.mixer.pre_init(frequency=AUDIO_FREQUENCY) 
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -67,7 +67,7 @@ camera = PiCamera()
 start = timer()
 
 
-while timer() - start < 30:
+while timer() - start < 10:
     # Byte array to hold image
     stream = io.BytesIO()
 
@@ -91,8 +91,8 @@ while timer() - start < 30:
         stream = io.BytesIO()
         camera.capture(stream, use_video_port=False, resize=FULL_IMAGE_SIZE, format='jpeg')
         stream.seek(0)
+        image_bytes = stream.read()
         # TODO: take image full size
-        caption = captioner.generate_caption(stream) # probably need to somehow convert to numpy array or tensor
-        audio = tts.get_audio(caption)
+        audio = image_to_speech.post_request(image_bytes)
         pygame.mixer.Sound(audio).play()
-        save_img_and_caption(stream, caption)
+        save_img_and_caption(stream, 'foo')
