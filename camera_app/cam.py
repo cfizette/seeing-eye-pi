@@ -65,9 +65,14 @@ class CameraApp:
         self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
         self.camera = PiCamera()
         self.filesystem = CameraAppFilesystem()
-        self.take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
-        self.quit_button = GPIOButton(QUIT_PIN)
         self.shutter_effect = pygame.mixer.Sound(SHUTTER_EFFECT_PATH)
+        # Setup button interrupts
+        self.setup_interrupt_button(TAKE_PHOTO_PIN, self.capture_and_process_image)
+        self.setup_interrupt_button(QUIT_PIN, self.quit)
+
+    def setup_interrupt_button(self, pin, callback):
+        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(pin, GPIO.FALLING, callback, 200)
 
     def show_viewfinder(self):
         stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, img_format='rgb')
@@ -106,15 +111,15 @@ class CameraApp:
         self.play_pygame_sound(sound)
         print("Saving data")
         self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
+    
+    def quit(self):
+        pygame.quit()
+        sys.exit
 
     def run(self):
         while True:
             self.show_viewfinder()
-            if self.take_photo_button.is_pressed():
-                self.capture_and_process_image()
-            if self.quit_button.is_pressed():
-                pygame.quit()
-                sys.exit()
+
 
 if __name__ == "__main__":
     pygame.mixer.pre_init(frequency=AUDIO_FREQUENCY) 
