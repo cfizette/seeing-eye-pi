@@ -23,7 +23,7 @@ WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
 AUDIO_FREQUENCY = 12000 #TODO figure out correct setting for this
 REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1/HttpTrigger'
-SHUTTER_EFFECT = 'assets/camera-shutter.ogg'
+SHUTTER_EFFECT_PATH = 'assets/camera-shutter.ogg'
 # 12000 sounds good on my computer but I have to increase it to sound correct on the Raspberry Pi
 
 
@@ -66,7 +66,7 @@ class CameraApp:
         self.camera = PiCamera()
         self.filesystem = CameraAppFilesystem()
         self.take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
-        self.shutter_effect = pygame.mixer.Sound(SHUTTER_EFFECT)
+        self.shutter_effect = pygame.mixer.Sound(SHUTTER_EFFECT_PATH)
 
     def show_viewfinder(self):
         stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, img_format='rgb')
