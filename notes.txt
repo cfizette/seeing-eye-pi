@@ -1,0 +1,4 @@
+This document contains various notes that will have to be included in the final documentation
+
+1) Auido setup
+    May have to use raspi-config to setup audio to be forced through the audio jack
