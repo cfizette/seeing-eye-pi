@@ -1,3 +1,5 @@
+# Loads existing image instead of using the camera to take a photo
+
 import os
 import io
 import re
@@ -62,8 +64,6 @@ class CameraApp:
         # For now just use globals to initialize attributes
         self.image_to_speech = ImageToSpeechRequest(url=REQUEST_URL)
         self.rgb = bytearray(RGB_DATA_SIZE)
-        self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
-        self.camera = PiCamera()
         self.filesystem = CameraAppFilesystem()
         self.shutter_effect = pygame.mixer.Sound(SHUTTER_EFFECT_PATH)
         # Setup button interrupts
@@ -72,19 +72,7 @@ class CameraApp:
 
     def setup_interrupt_button(self, pin, callback):
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(pin, GPIO.FALLING, callback, 200)
-
-    def show_viewfinder(self):
-        stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, img_format='rgb')
-        stream.readinto(self.rgb)
-        # Convert to pygame image
-        img = pygame.image.frombuffer(self.rgb[0:(RGB_DATA_SIZE)], WINDOW_SIZE, 'RGB')
-        # Display image on pygame screen
-        if img is None or img.get_height() < WINDOW_SIZE[1]: # Letterbox, clear background
-            self.screen.fill(0)
-        if img:
-            self.screen.blit(img, ((WINDOW_SIZE[0] - img.get_width() ) / 2, (WINDOW_SIZE[1] - img.get_height()) / 2))
-        pygame.display.update()
+        GPIO.add_event_detect(pin, GPIO.FALLING, callback, 50)
 
     def capture_photo_to_stream(self, use_video_port, resize, img_format):
         stream = io.BytesIO()
@@ -98,11 +86,12 @@ class CameraApp:
         while channel.get_busy():
             pygame.time.delay(10)
 
-    def capture_and_process_image(self):
-        print('Taking photo in capture_and_process_image')
+    def capture_and_process_image(self, pin=None):
+        # Load existing image and process it
+        print('Loading image')
         self.play_pygame_sound(self.shutter_effect)
-        stream = self.capture_photo_to_stream(use_video_port=False, resize=FULL_IMAGE_SIZE, img_format='jpeg')
-        image_bytes = stream.read()
+        with open('assets/cat.jpg', 'rb') as f:
+            image_bytes = f.read()
         print('Sending photo to Azure')
         audio = self.image_to_speech.post_request(image_bytes)
         print("Received audio")
@@ -110,15 +99,15 @@ class CameraApp:
         sound = pygame.mixer.Sound(audio)
         self.play_pygame_sound(sound)
         print("Saving data")
-        self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
+        # self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
     
-    def quit(self):
+    def quit(self, pin=None):
         pygame.quit()
         sys.exit
 
     def run(self):
         while True:
-            self.show_viewfinder()
+            pass
 
 
 if __name__ == "__main__":
