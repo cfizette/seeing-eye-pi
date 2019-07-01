@@ -16,7 +16,7 @@ from api_requests import ImageToSpeechRequest
 
 TAKE_PHOTO_PIN = 17
 QUIT_PIN = 27
-WINDOW_SIZE = (320,240)
+WINDOW_SIZE = (640,480)
 FULL_IMAGE_SIZE = WINDOW_SIZE
 RGB_DATA_SIZE = WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3  
 WAIT_AFTER_PHOTO = 3
@@ -62,7 +62,7 @@ class CameraApp:
         # For now just use globals to initialize attributes
         self.image_to_speech = ImageToSpeechRequest(url=REQUEST_URL)
         self.rgb = bytearray(RGB_DATA_SIZE)
-        self.screen = pygame.display.set_mode(WINDOW_SIZE)
+        self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
         self.camera = PiCamera()
         self.filesystem = CameraAppFilesystem()
         self.take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
