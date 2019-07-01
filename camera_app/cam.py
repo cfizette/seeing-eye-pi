@@ -15,6 +15,7 @@ from timeit import default_timer as timer
 from api_requests import ImageToSpeechRequest
 
 TAKE_PHOTO_PIN = 17
+QUIT_PIN = 27
 WINDOW_SIZE = (320,240)
 FULL_IMAGE_SIZE = WINDOW_SIZE
 RGB_DATA_SIZE = WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3  
@@ -65,6 +66,7 @@ class CameraApp:
         self.camera = PiCamera()
         self.filesystem = CameraAppFilesystem()
         self.take_photo_button = GPIOButton(TAKE_PHOTO_PIN)
+        self.quit_button = GPIOButton(QUIT_PIN)
         self.shutter_effect = pygame.mixer.Sound(SHUTTER_EFFECT_PATH)
 
     def show_viewfinder(self):
@@ -106,11 +108,13 @@ class CameraApp:
         self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
 
     def run(self):
-        start = timer()
-        while timer() - start < 10:
+        while True:
             self.show_viewfinder()
             if self.take_photo_button.is_pressed():
                 self.capture_and_process_image()
+            if self.quit_button.is_pressed():
+                pygame.quit()
+                sys.exit()
 
 if __name__ == "__main__":
     pygame.mixer.pre_init(frequency=AUDIO_FREQUENCY) 
