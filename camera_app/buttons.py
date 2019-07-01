@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
 
 class GPIOButton(object):
     def __init__(self, pin, pull_up_down=GPIO.PUD_UP):

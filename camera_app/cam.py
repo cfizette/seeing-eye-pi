@@ -13,7 +13,6 @@ from picamera import PiCamera
 from buttons import GPIOButton
 from timeit import default_timer as timer
 from api_requests import ImageToSpeechRequest
-GPIO.setmode(GPIO.BCM)  # TODO: Run this when button is created
 
 TAKE_PHOTO_PIN = 17
 WINDOW_SIZE = (320,240)
