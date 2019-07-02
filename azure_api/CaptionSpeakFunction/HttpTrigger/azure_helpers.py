@@ -86,7 +86,7 @@ class AzureTextToSpeech(object):
         voice.text = text
         return ElementTree.tostring(xml_body)
 
-    def get_audio(self, text: str) -> response:
+    def get_audio(self, text: str) -> requests.Response:
         """Convert text to audio using Azure Text to Speech REST API
         
         Arguments:

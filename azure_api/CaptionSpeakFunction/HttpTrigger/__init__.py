@@ -19,10 +19,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                   See Azure Computer Vision API for details on supported image formats.
     
     Returns:
-        func.HttpResponse -- Body contains following JSON:
-                             {
-                                 'caption': String of generated caption, 
-                                 'audio': String of b64 encoded audio data.
+        func.HttpResponse -- Body: Base 64 encoded audio
+                             Headers: {
+                                 'caption': String of caption
                              }
     """
     logging.info('Python HTTP trigger function processed a request.')
@@ -35,10 +34,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if image:
         caption, audio = its.get_caption_and_audio(image)
         audio_b64 = base64.b64encode(audio)
-        response = {'caption': caption,
-                    'audio_b64': audio_b64}
-        response_str = json.dumps(response)
-        return func.HttpResponse(response_str)
+        headers = {'caption':caption}
+        return func.HttpResponse(body=audio_b64, headers=headers)
     # TODO Create better response if error occurs
     else:
         return func.HttpResponse(
