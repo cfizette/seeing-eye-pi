@@ -11,10 +11,20 @@ import json
 # Figure out how to tell when token is expired and then re-fetch it.
 its = AzureImageToSpeech()
 
-# TODO: docstrings
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    # Body of request must contain b64 encoded image data
-
+    """Generate caption describing image and audio of that caption.
+    
+    Arguments:
+        req {func.HttpRequest} -- Body of HttpRequest must contain b64 encoded image.
+                                  See Azure Computer Vision API for details on supported image formats.
+    
+    Returns:
+        func.HttpResponse -- Body contains following JSON:
+                             {
+                                 'caption': String of generated caption, 
+                                 'audio': String of b64 encoded audio data.
+                             }
+    """
     logging.info('Python HTTP trigger function processed a request.')
 
     # Read, decode, and construct generator
