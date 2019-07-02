@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from msrest.authentication import CognitiveServicesCredentials
 import io
+from typing import Tuple
 
 load_dotenv(find_dotenv())
 
@@ -93,7 +94,7 @@ class AzureTextToSpeech(object):
             text {str} -- Text to be synthesized into speech
         
         Returns:
-            response -- Response object returned from Azure. 
+            response -- Response object returned from Azure. Body contains audio data.
         """
 
         headers = {
@@ -111,7 +112,6 @@ class AzureTextToSpeech(object):
             print("\nStatus code: " + str(response.status_code) + "\nSomething went wrong. Check your subscription key and headers.\n")
         return response
 
-# TODO change to return caption and audio in dictionary
 # TODO create base class to generalize this process, may want different captioning or tts systems in the future
 class AzureImageToSpeech(object):
     def __init__(self, 
@@ -129,14 +129,14 @@ class AzureImageToSpeech(object):
         self.captioner = AzureCaptioner(endpoint=self.cv_endpoint, key=self.cv_key)
         self.tts = AzureTextToSpeech(key=self.speech_key, rest_url=self.speech_rest_url, fetch_token_url=speech_fetch_token_url)
 
-    def get_caption_and_audio(self, image: io.BytesIO) -> (str, bytes):
+    def get_caption_and_audio(self, image: io.BytesIO) -> Tuple[str, bytes]:
         """Caption an image and convert the caption to audio
         
         Arguments:
             image {io.BytesIO} -- Byte stream containing image data
         
         Returns:
-            bytes -- Audio of the generated caption
+            Tuple[str, bytes] -- Caption and audio of caption.
         """
         caption = self.captioner.generate_caption(image)
         audio_response = self.tts.get_audio(caption)
