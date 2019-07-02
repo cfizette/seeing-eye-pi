@@ -14,8 +14,7 @@ class ImageToSpeechRequest(object):
     def post_request(self, image: bytes) -> str:
         image_encoded = base64.b64encode(image)
         response = requests.post(self.url, image_encoded) 
-        response_dict = json.loads(response.content)
-        caption = response_dict['caption']
-        audio_b64 = response_dict['audio_b64']
+        caption = response.headers['caption']
+        audio_b64 = response.content
         audio = base64.b64decode(audio_b64)
         return caption, audio

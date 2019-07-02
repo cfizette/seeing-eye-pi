@@ -24,7 +24,7 @@ RGB_DATA_SIZE = WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3
 WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
 AUDIO_FREQUENCY = 12000 #TODO figure out correct setting for this
-REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1/HttpTrigger'
+REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1NorthCentralUS/HttpTrigger'
 SHUTTER_EFFECT_PATH = 'assets/camera-shutter.ogg'
 # 12000 sounds good on my computer but I have to increase it to sound correct on the Raspberry Pi
 
@@ -93,7 +93,8 @@ class CameraApp:
         with open('assets/cat.jpg', 'rb') as f:
             image_bytes = f.read()
         print('Sending photo to Azure')
-        audio = self.image_to_speech.post_request(image_bytes)
+        caption, audio = self.image_to_speech.post_request(image_bytes)
+        print(caption)
         print("Received audio")
         print('Playing audio')
         sound = pygame.mixer.Sound(audio)
@@ -111,6 +112,7 @@ class CameraApp:
 
 
 if __name__ == "__main__":
+    print('hi')
     pygame.mixer.pre_init(frequency=AUDIO_FREQUENCY) 
     pygame.init()
     app = CameraApp()

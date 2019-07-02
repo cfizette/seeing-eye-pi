@@ -22,7 +22,7 @@ RGB_DATA_SIZE = WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3
 WAIT_AFTER_PHOTO = 3
 IMG_DIR = 'photos'
 AUDIO_FREQUENCY = 12000 #TODO figure out correct setting for this
-REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1/HttpTrigger'
+REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1NorthCentralUS/HttpTrigger'
 SHUTTER_EFFECT_PATH = 'assets/camera-shutter.ogg'
 # 12000 sounds good on my computer but I have to increase it to sound correct on the Raspberry Pi
 
