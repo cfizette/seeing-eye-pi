@@ -104,13 +104,14 @@ class CameraApp:
         stream = self.capture_photo_to_stream(use_video_port=False, resize=FULL_IMAGE_SIZE, img_format='jpeg')
         image_bytes = stream.read()
         print('Sending photo to Azure')
-        audio = self.image_to_speech.post_request(image_bytes)
-        print("Received audio")
+        caption, audio = self.image_to_speech.post_request(image_bytes)
+        print("Received audio and caption")
+        print(caption)
         print('Playing audio')
         sound = pygame.mixer.Sound(audio)
         self.play_pygame_sound(sound)
         print("Saving data")
-        self.filesystem.save_img_and_caption(stream, 'foo')  # TODO add caption here
+        self.filesystem.save_img_and_caption(stream, caption) 
     
     def quit(self):
         pygame.quit()
