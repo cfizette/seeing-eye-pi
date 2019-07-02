@@ -2,17 +2,13 @@ import os
 import io
 import re
 import sys
-import pdb
 import pygame
-import time
-import subprocess
 from PIL import Image
 from os.path import join
 import RPi.GPIO as GPIO
 from picamera import PiCamera
-from buttons import GPIOButton
-from timeit import default_timer as timer
 from api_requests import ImageToSpeechRequest
+from typing import Tuple
 
 TAKE_PHOTO_PIN = 17
 QUIT_PIN = 27
@@ -47,7 +43,16 @@ class CameraAppFilesystem:
             if n >= self.file_num:
                 self.file_num = n+1
 
-    def save_img_and_caption(self, stream, caption):
+    def save_img_and_caption(self, stream: io.BytesIO, caption: str):
+        """Save image and caption.
+        Files are saved within self.img_dir.
+        Images saved as IMG_<self.n>.jpg.
+        Captions saved as IMG_<self.n>.txt
+        
+        Arguments:
+            stream {io.BytesIO} -- Stream containing image.
+            caption {str} -- String of caption.
+        """
         image_filename = 'IMG_{}.jpg'.format(self.file_num)
         caption_filename = 'IMG_{}.txt'.format(self.file_num)
         im = Image.open(stream)
@@ -70,11 +75,20 @@ class CameraApp:
         self.setup_interrupt_button(TAKE_PHOTO_PIN, self.capture_and_process_image)
         self.setup_interrupt_button(QUIT_PIN, self.quit)
 
-    def setup_interrupt_button(self, pin, callback):
+    def setup_interrupt_button(self, pin: int, callback: callable):
+        """Configure falling interrupt on pin.
+        Sets up GPIO pin with a pull up resistor. When button is pressed, it will be grounded.
+        Thus a falling signal is used to trigger the interrupt.
+        
+        Arguments:
+            pin {int} -- GPIO pin to use for interrupt.
+            callback {callable} -- Function or other callable to be called on interrupt.
+                The callable must be able to accept an argument being passed to it as pin is passed to it.
+        """
         GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.add_event_detect(pin, GPIO.FALLING, callback, 200)
 
-    def show_viewfinder(self):
+    def show_viewfinder(self):        
         stream = self.capture_photo_to_stream(use_video_port=True, resize=WINDOW_SIZE, img_format='rgb')
         stream.readinto(self.rgb)
         # Convert to pygame image
@@ -86,13 +100,29 @@ class CameraApp:
             self.screen.blit(img, ((WINDOW_SIZE[0] - img.get_width() ) / 2, (WINDOW_SIZE[1] - img.get_height()) / 2))
         pygame.display.update()
 
-    def capture_photo_to_stream(self, use_video_port, resize, img_format):
+    def capture_photo_to_stream(self, use_video_port: bool, resize: Tuple[int, int], img_format: str) -> io.BytesIO:
+        """Capture image to stream.
+        
+        Arguments:
+            use_video_port {bool} -- If true, use camera image port to capture image. Otherwise use video port.
+            resize {Tuple[int, int]} -- Size of image to be captured.
+            img_format {str} -- Dictates image format to be captured. See picamera documentation for supported formats.
+        
+        Returns:
+            io.BytesIO -- Stream containing image data.
+        """
         stream = io.BytesIO()
         self.camera.capture(stream, use_video_port=use_video_port, resize=resize, format=img_format)
         stream.seek(0)
         return stream
 
-    def play_pygame_sound(self, sound):
+    def play_pygame_sound(self, sound: pygame.mixer.Sound):
+        """Play a sound using pygame. 
+        This function delays the program while the sound is being played to allow it to be played entirely.
+        
+        Arguments:
+            sound {pygame.mixer.Sound} -- [description]
+        """
         channel = sound.play()
         # Need to pause to allow sound to be played
         while channel.get_busy():
