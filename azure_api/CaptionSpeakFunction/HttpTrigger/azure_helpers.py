@@ -129,7 +129,7 @@ class AzureImageToSpeech(object):
         self.captioner = AzureCaptioner(endpoint=self.cv_endpoint, key=self.cv_key)
         self.tts = AzureTextToSpeech(key=self.speech_key, rest_url=self.speech_rest_url, fetch_token_url=speech_fetch_token_url)
 
-    def get_audio(self, image: io.BytesIO) -> bytes:
+    def get_caption_and_audio(self, image: io.BytesIO) -> (str, bytes):
         """Caption an image and convert the caption to audio
         
         Arguments:
@@ -140,4 +140,4 @@ class AzureImageToSpeech(object):
         """
         caption = self.captioner.generate_caption(image)
         audio_response = self.tts.get_audio(caption)
-        return audio_response.content
+        return caption, audio_response.content
