@@ -3,6 +3,7 @@ import io
 import azure.functions as func
 from HttpTrigger.azure_helpers import AzureCaptioner, AzureTextToSpeech, AzureImageToSpeech
 import base64
+import json
 
 # TODO Investigate how cacheing this object works on an azure function
 # Does this actually increase responsiveness since we don't need to fetch a token
@@ -22,10 +23,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     image = io.BytesIO(image_decoded)
 
     if image:
-        #its = AzureImageToSpeech()
-        audio = its.get_audio(image)
-        audio_encoded = base64.b64encode(audio)
-        return func.HttpResponse(audio_encoded)
+        caption, audio = its.get_caption_and_audio(image)
+        audio_b64 = base64.b64encode(audio)
+        response = {'caption': caption,
+                    'audio_b64': audio_b64}
+        response_str = json.dumps(response)
+        return func.HttpResponse(response_str)
     # TODO Create better response if error occurs
     else:
         return func.HttpResponse(
