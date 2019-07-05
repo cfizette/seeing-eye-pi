@@ -10,17 +10,17 @@ from picamera import PiCamera
 from api_requests import ImageToSpeechRequest
 from typing import Tuple
 
+APP_PATH = os.path.dirname(os.path.abspath(__file__))
 TAKE_PHOTO_PIN = 17
 QUIT_PIN = 27
 WINDOW_SIZE = (640,480)
 FULL_IMAGE_SIZE = WINDOW_SIZE
 RGB_DATA_SIZE = WINDOW_SIZE[0] * WINDOW_SIZE[1] * 3  
 WAIT_AFTER_PHOTO = 3
-IMG_DIR = 'photos'
+IMG_DIR = os.path.join(APP_PATH, 'photos')
 AUDIO_FREQUENCY = 12000 #TODO figure out correct setting for this
 REQUEST_URL = 'https://seeing-eye-pi.azure-api.net/ImageToSpeechV1NorthCentralUS/HttpTrigger'
-SHUTTER_EFFECT_PATH = 'assets/camera-shutter.ogg'
-# 12000 sounds good on my computer but I have to increase it to sound correct on the Raspberry Pi
+SHUTTER_EFFECT_PATH = os.path.join(APP_PATH, 'assets/camera-shutter.ogg')
 
 
 class CameraAppFilesystem:
