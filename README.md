@@ -18,7 +18,5 @@ SPEECH_REST_URL=
 
 ## Major TODOs
 * Error handling and logging
-* Design/buy/download case and put everything together
-
 
 ## Minor TODOs
